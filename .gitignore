@@ -1,0 +1,6 @@
+downloads/
+ledger/
+.envrc
+.direnv/
+*.pyc
+__pycache__
