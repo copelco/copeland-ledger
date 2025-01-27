@@ -53,6 +53,14 @@ Archive the data:
 beangulp-import --config=$LEDGER_HOME/accounts.yaml beangulp archive $LEDGER_HOME/downloads --destination=$LEDGER_HOME/documents
 ```
 
+Fetch latest price of stocks:
+
+```sh
+bean-price $LEDGER_HOME/ledger.beancount
+bean-price --update $LEDGER_HOME/ledger.beancount
+```
+
+
 ## Helpful Links
 
 * [Getting Started with Beancount](https://beancount.github.io/docs/getting_started_with_beancount.html)

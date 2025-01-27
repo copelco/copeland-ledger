@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.9,<3.13"
 dependencies = [
     "beancount",
+    "beanprice @ git+https://github.com/beancount/beanprice.git@master",
     "beanquery",
     "click",
     "fava",
