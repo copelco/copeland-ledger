@@ -1,10 +1,12 @@
 # copeland-ledger
 
-Tracking our expenses using:
+My tools for tracking expenses using beancount: Double-Entry Accounting from
+Text Files. This project uses the following packages:
 
-* [Beancount](https://beancount.github.io/) (3.0)
-* [Beangulp](https://github.com/beancount/beangulp)
-* [Fava](https://beancount.github.io/fava/)
+* [Beancount](https://beancount.github.io/) (3.0): Double-Entry Accounting from Text Files
+* [Beangulp](https://github.com/beancount/beangulp): Importers framework for Beancount
+* [ofxtools](https://github.com/csingley/ofxtools): Python library for working with OFX files
+* [Fava](https://beancount.github.io/fava/): Web interface for Beancount
 
 ## Setup
 
@@ -13,6 +15,8 @@ Tracking our expenses using:
       ```shell
       # example .envrc file if you use direnv
       layout python python3.12
+
+      export $LEDGER_HOME=~/path/to/your/ledger/directory
       ```
 
 2. Install the required dependencies.
@@ -25,7 +29,19 @@ Tracking our expenses using:
       pip install -e ".[dev]"
       ```
 
-3. Run fava!
+3. Create a configuration file for your accounts.
+
+      ```yaml
+      # example $LEDGER_HOME/accounts.yaml
+      accounts:
+        - bean_account: Assets:US:Ally:Checking
+          org: Ally
+          acctid_suffix: "1111"
+      ```
+
+4. Import data using the instructions below.
+
+5. Run fava!
 
       ```shell
       fava $LEDGER_HOME/ledger.beancount
@@ -34,7 +50,7 @@ Tracking our expenses using:
 
 ## Import data
 
-Download files and verify the data:
+Download files manually to `$LEDGER_HOME/downloads` and verify the data:
 
 ```shell
 beangulp-import --config=$LEDGER_HOME/accounts.yaml beangulp identify $LEDGER_HOME/downloads
