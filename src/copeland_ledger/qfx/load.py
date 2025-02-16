@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from .extract import parse_ofx
-from ..models import Statement, StatementList
+from ..models import StatementType, StatementList
 from .transform import transform_ofx
 
 import structlog
@@ -16,6 +16,6 @@ def load(path: str) -> StatementList:
     return transform_ofx(ofx=ofx)
 
 
-def load_statement(path: str, acctid_suffix: str) -> Statement | None:
+def load_statement(path: str, acctid_suffix: str) -> StatementType | None:
     statement_list = load(path=path)
     return statement_list.get_by_acctid_suffix(suffix=acctid_suffix)

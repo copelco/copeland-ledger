@@ -51,12 +51,13 @@ def transform_statement_list(ofx: OFX) -> StatementList:
 
 def transform_statement(ofx_statement: CCSTMTRS) -> Statement:
     """Create a Statement from an OFX statement."""
+    currency = ofx_statement.curdef
     transactions = [
-        transform_transaction(ofx_transaction=ofx_transaction)
+        transform_transaction(ofx_transaction=ofx_transaction, currency=currency)
         for ofx_transaction in ofx_statement.transactions
     ]
     statement = Statement(
-        currency=ofx_statement.curdef,
+        currency=currency,
         acct_id=ofx_statement.account.acctid,
         transactions=transactions,
     )
@@ -64,13 +65,14 @@ def transform_statement(ofx_statement: CCSTMTRS) -> Statement:
     return statement
 
 
-def transform_transaction(ofx_transaction: STMTTRN) -> Transaction:
+def transform_transaction(ofx_transaction: STMTTRN, currency: str) -> Transaction:
     """Create a Transaction from an OFX transaction."""
     return Transaction(
         fit_id=ofx_transaction.fitid,
         date_posted=ofx_transaction.dtposted,
         memo=ofx_transaction.name,
         amount=ofx_transaction.trnamt,
+        currency=currency,
     )
 
 
@@ -113,15 +115,18 @@ def transform_invest_statement_list(ofx: OFX) -> StatementList:
 def transform_invest_statement(
     ofx_statement: INVSTMTRS, securities: dict[int, Security]
 ) -> InvestStatement:
+    """Create an InvestStatement from a INVSTMTRS statement."""
+    currency = ofx_statement.curdef
     transactions = [
         transform_invest_transaction(
             transaction=ofx_transaction,
             securities=securities,
+            currency=currency,
         )
         for ofx_transaction in ofx_statement.transactions
     ]
     statement = InvestStatement(
-        currency=ofx_statement.curdef,
+        currency=currency,
         acct_id=ofx_statement.account.acctid,
         broker=ofx_statement.account.brokerid,
         date=ofx_statement.dtasof,
@@ -133,19 +138,27 @@ def transform_invest_statement(
 
 
 def transform_invest_transaction(
-    transaction: BUYMF | SELLMF | REINVEST, securities: dict[int, Security]
+    transaction: BUYMF | SELLMF | REINVEST,
+    securities: dict[int, Security],
+    currency: str,
 ) -> InvestTransaction:
     """Create an InvestTransaction from an OFX transaction."""
     ticker = securities[int(transaction.secid.uniqueid)].ticker
     if isinstance(transaction, (INCOME, REINVEST, SELLMF, TRANSFER)):
-        return transform_invtran(transaction=transaction, ticker=ticker)
+        return transform_invtran(
+            transaction=transaction, ticker=ticker, currency=currency
+        )
     elif isinstance(transaction, BUYMF):
-        return transform_invbuy(transaction=transaction, ticker=ticker)
+        return transform_invbuy(
+            transaction=transaction, ticker=ticker, currency=currency
+        )
     else:
         raise ValueError(f"Unsupported transaction type: {transaction}")
 
 
-def transform_invtran(transaction: REINVEST, ticker: str) -> InvestTransaction:
+def transform_invtran(
+    transaction: REINVEST, ticker: str, currency: str
+) -> InvestTransaction:
     """Create an InvestTransaction from an INVTRAN transaction."""
     invtran: INVTRAN = transaction.invtran
     return InvestTransaction(
@@ -156,10 +169,13 @@ def transform_invtran(transaction: REINVEST, ticker: str) -> InvestTransaction:
         units=transaction.units if hasattr(transaction, "units") else None,
         unit_price=transaction.unitprice if hasattr(transaction, "unitprice") else None,
         amount=transaction.total if hasattr(transaction, "total") else None,
+        currency=currency,
     )
 
 
-def transform_invbuy(transaction: BUYMF, ticker: str) -> InvestTransaction:
+def transform_invbuy(
+    transaction: BUYMF, ticker: str, currency: str
+) -> InvestTransaction:
     """Create an InvestTransaction from an INVBUY transaction."""
     invbuy: INVBUY = transaction.invbuy
     return InvestTransaction(
@@ -170,4 +186,5 @@ def transform_invbuy(transaction: BUYMF, ticker: str) -> InvestTransaction:
         units=invbuy.units,
         unit_price=invbuy.unitprice,
         amount=invbuy.total,
+        currency=currency,
     )

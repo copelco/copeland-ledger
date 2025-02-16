@@ -13,6 +13,7 @@ class Transaction(BaseModel):
     date_posted: dt.datetime
     memo: str
     amount: Decimal
+    currency: str
 
 
 class Statement(BaseModel):
@@ -67,3 +68,7 @@ class InvestStatement(Statement):
     broker: str
     securities: dict[int, Security] = Field(repr=False)
     transactions: list[InvestTransaction] = Field(repr=False)
+
+
+StatementType = Statement | InvestStatement
+TransactionType = Transaction | InvestTransaction
