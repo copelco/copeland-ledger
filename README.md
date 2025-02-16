@@ -86,3 +86,5 @@ bean-price --update $LEDGER_HOME/ledger.beancount
 
 * [Getting Started with Beancount](https://beancount.github.io/docs/getting_started_with_beancount.html)
 * https://github.com/pwalkr/beancount-utils/
+* [SQL queries for Beancount](https://aumayr.github.io/beancount-sql-queries/)
+* ``SELECT last(date) as last_date, account GROUP BY account ORDER BY last_date DESC;``

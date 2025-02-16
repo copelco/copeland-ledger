@@ -12,6 +12,7 @@ dependencies = [
     "fava",
     "keyring",
     "ofxtools @ git+https://github.com/csingley/ofxtools@master",
+    "pandas",
     "pydantic",
     "rich",
     "structlog",
@@ -25,6 +26,7 @@ dev = [
 
 [project.scripts]
 beangulp-import = "copeland_ledger.scripts.beangulp_importer:main"
+bean-pod = "copeland_ledger.scripts.beanpod:main"
 
 [build-system]
 requires = ["hatchling"]

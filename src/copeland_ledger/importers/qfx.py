@@ -11,10 +11,13 @@ import structlog
 from beangulp import mimetypes
 from beancount.core import amount, data, flags
 from ofxtools.models.bank import CCSTMTRS, STMTRS
+from ofxtools.models.invest import INVSTMTRS
 from ofxtools.models.ofx import OFX
 from ofxtools.Parser import OFXTree
 from ofxtools.Types import OFXTypeError, OFXTypeWarning
 from pydantic import BaseModel
+
+from copeland_ledger.qfx.load import load_statement
 
 logger = structlog.get_logger(__file__)
 warnings.filterwarnings("ignore", category=OFXTypeWarning)
@@ -53,22 +56,6 @@ class Transaction(BaseModel):
         from_attributes = True
 
 
-def fix_ofx(ofx: ET.ElementTree) -> ET.ElementTree:
-    """Attempt to fix an OFX file to be parsable by ofxtools."""
-
-    # Change the severity to uppercase
-    for element in ofx.iter("SEVERITY"):
-        element.text = element.text.upper()
-
-    # For each STMTTRN tag, move the NAME tag to be the last child
-    for element in ofx.iter("STMTTRN"):
-        name = element.find("NAME")
-        element.remove(name)
-        element.append(name)
-
-    return ofx
-
-
 class QfxImporter(beangulp.Importer):
     def __init__(self, org: str, acctid_suffix: str, bean_account: str):
         self.bean_account = bean_account
@@ -95,34 +82,15 @@ class QfxImporter(beangulp.Importer):
         if mimetype not in VALID_MIMETYPES:
             return False
 
-        # Parse the OFX file.
-        ofx_path = Path(filepath)
-        self.ofx = parser.parse(ofx_path)
-        try:
-            self.ofx: OFX = parser.convert()
-        except OFXTypeError as e:
-            logger.warning("Error parsing OFX file", error=e, ofx_path=ofx_path)
-            # Attempt to fix the OFX file and try again
-            fix_ofx(parser._root)
-            self.ofx: OFX = parser.convert()
-            logger.debug("Fixed OFX file", ofx_path=ofx_path)
-
-        # Find the statement that matches our account.
-        for statement in self.ofx.statements:
-            logger.debug(
-                "Checking statement",
-                statement_accid=statement.account.acctid,
-                statement_org=self.org,
+        statement = load_statement(path=filepath, acctid_suffix=self.acctid_suffix)
+        if statement is not None:
+            logger.info(
+                "Identified QFX file",
+                filename=Path(filepath).name,
+                acctid_suffix=self.acctid_suffix,
+                ofx_org=self.org,
             )
-            if statement.account.acctid.endswith(self.acctid_suffix):
-                logger.info(
-                    "Identified QFX file",
-                    filename=ofx_path.name,
-                    acctid_suffix=self.acctid_suffix,
-                    ofx_org=self.org,
-                )
-                self.statement = statement
-                return True
+            return True
 
     def get_statement_info(self, ofx: OFX, statement: CCSTMTRS | STMTRS) -> dict:
         """Get bank/credit card account information from an OFX statement."""
@@ -132,6 +100,9 @@ class QfxImporter(beangulp.Importer):
             accttype = "CREDITCARD"
         elif isinstance(statement, STMTRS):
             accttype = statement.account.accttype
+        elif isinstance(statement, INVSTMTRS):
+            accttype = "INVEST"
+            breakpoint()
 
         return {
             "org": self.org,
