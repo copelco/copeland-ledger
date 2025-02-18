@@ -1,4 +1,5 @@
-import itertools
+import datetime as dt
+
 from pathlib import Path
 
 import beangulp
@@ -7,6 +8,7 @@ from beancount.core import amount, data, flags
 from beangulp import mimetypes
 
 from copeland_ledger.models import StatementType, TransactionType
+from copeland_ledger.qfx.extract import ofx_content_contains_account_id_suffix
 from copeland_ledger.qfx.load import load_statement
 
 logger = structlog.get_logger(__file__)
@@ -37,6 +39,16 @@ class QfxImporter(beangulp.Importer):
         """Return the account against which we post transactions."""
         return self.bean_account
 
+    def date(self, filepath: str) -> dt.date | None:
+        """Return the date of the last transaction of the statement."""
+        if self.statement:
+            return self.statement.transactions[-1].date_posted.date()
+
+    def filename(self, filepath: str) -> str:
+        """Return the archival filename for the given file."""
+        path = Path(filepath)
+        return f"{self.org}_{self.acctid_suffix}{path.suffix}"
+
     def identify(self, filepath: str):
         """Return True if this importer matches a QFX file."""
 
@@ -45,9 +57,13 @@ class QfxImporter(beangulp.Importer):
         if mimetype not in VALID_MIMETYPES:
             return False
 
-        statement = load_statement(path=filepath, acctid_suffix=self.acctid_suffix)
-        if statement is not None:
-            self.statement = statement
+        content = Path(filepath).read_text()
+        if ofx_content_contains_account_id_suffix(
+            ofx_content=content, account_id_suffix=self.acctid_suffix
+        ):
+            self.statement = load_statement(
+                path=filepath, acctid_suffix=self.acctid_suffix
+            )
             logger.info(
                 "Identified QFX file",
                 filename=Path(filepath).name,

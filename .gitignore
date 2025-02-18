@@ -6,3 +6,7 @@ ledger/
 __pycache__
 *ipynb_checkpoints/
 *ipynb
+.coverage
+htmlcov/
+.pytest_cache/
+.vscode

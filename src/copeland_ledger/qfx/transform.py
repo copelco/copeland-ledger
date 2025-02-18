@@ -56,6 +56,8 @@ def transform_statement(ofx_statement: CCSTMTRS) -> Statement:
         transform_transaction(ofx_transaction=ofx_transaction, currency=currency)
         for ofx_transaction in ofx_statement.transactions
     ]
+    # Sort transactions by date
+    transactions = sorted(transactions, key=lambda t: t.date_posted)
     statement = Statement(
         currency=currency,
         acct_id=ofx_statement.account.acctid,
@@ -125,6 +127,8 @@ def transform_invest_statement(
         )
         for ofx_transaction in ofx_statement.transactions
     ]
+    # Sort transactions by date
+    transactions = sorted(transactions, key=lambda t: t.date_posted)
     statement = InvestStatement(
         currency=currency,
         acct_id=ofx_statement.account.acctid,

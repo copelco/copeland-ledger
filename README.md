@@ -56,6 +56,12 @@ Download files manually to `$LEDGER_HOME/downloads` and verify the data:
 beangulp-import --config=$LEDGER_HOME/accounts.yaml beangulp identify $LEDGER_HOME/downloads
 ```
 
+Preview the data:
+
+```shell
+bean-pod preview transactions.qfx
+```
+
 Extract the data:
 
 ```shell
