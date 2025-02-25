@@ -11,6 +11,7 @@ dependencies = [
     "click",
     "fava",
     "keyring",
+    "numpy-financial",
     "ofxtools @ git+https://github.com/csingley/ofxtools@master",
     "pandas",
     "pydantic",
@@ -39,3 +40,4 @@ line-length = 100
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-report=html"
 testpaths = ["tests"]
+norecursedirs = [".direnv", ".git"]

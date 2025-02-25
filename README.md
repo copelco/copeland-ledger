@@ -94,3 +94,6 @@ bean-price --update $LEDGER_HOME/ledger.beancount
 * https://github.com/pwalkr/beancount-utils/
 * [SQL queries for Beancount](https://aumayr.github.io/beancount-sql-queries/)
 * ``SELECT last(date) as last_date, account GROUP BY account ORDER BY last_date DESC;``
+* https://plaintextaccounting.org/Mortgages#beancount
+* https://www.reddit.com/r/plaintextaccounting/comments/hlbb2q/new_to_ledger_tracking_investments_and_and_loans/
+* https://www.reddit.com/r/plaintextaccounting/comments/vd7gmg/how_do_you_handle_the_same_transaction_coming/
