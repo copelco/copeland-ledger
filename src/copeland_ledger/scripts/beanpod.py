@@ -66,8 +66,8 @@ def amortization(
     loan = LoanDetail.from_config_file(path=config_path, name=loan_name)
     table_df = amortization_table(loan=loan)
     if latest_payments:
-        start = dt.date.today() - dt.timedelta(days=60)
-        table_df = table_df[table_df["date"] > str(start)][:5]
+        start = dt.date.today() - dt.timedelta(days=120)
+        table_df = table_df[table_df["date"] > str(start)][:10]
     if show_table:
         with pd.option_context("display.max_rows", 250):
             click.echo(table_df)
