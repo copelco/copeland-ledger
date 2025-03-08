@@ -7,7 +7,7 @@ import structlog
 from beancount.core import amount, data, flags
 from beangulp import mimetypes
 
-from copeland_ledger.models import StatementType, TransactionType
+from copeland_ledger.models import StatementType, TransactionType, InvestTransaction
 from copeland_ledger.qfx.extract import ofx_content_contains_account_id_suffix
 from copeland_ledger.qfx.load import load_statement
 
@@ -18,6 +18,44 @@ VALID_MIMETYPES = {
     "application/vnd.intu.qbo",
     "application/vnd.intu.qfx",
 }
+
+
+def build_bean_invest_transaction(
+    transaction: TransactionType, bean_account: str
+) -> data.Transaction:
+    """Build a beancount transaction from an OFX Investment Transaction."""
+
+    # if transaction.date_posted.date() == dt.date(2024, 11, 14):
+    #     breakpoint()
+    account = f"{bean_account}:{transaction.ticker}"
+    cost = data.Cost(
+        number=transaction.unit_price,
+        currency=transaction.currency,
+        date=None,
+        label=None,
+    )
+    # price = amount.Amount(number=transaction.unit_price, currency=transaction.currency)
+    units = amount.Amount(number=transaction.units, currency=transaction.ticker)
+    posting = data.Posting(
+        account=account,
+        units=units,
+        cost=cost,
+        price=None,
+        flag=None,
+        meta={"type": transaction.type, "amount": transaction.amount},
+    )
+    # Build the transaction with a single leg.
+    fileloc = data.new_metadata("<build_transaction>", 0)
+    return data.Transaction(
+        meta=fileloc,
+        date=transaction.date_posted.date(),
+        flag=flags.FLAG_OKAY,
+        payee=None,
+        narration=transaction.memo,
+        tags=data.EMPTY_SET,
+        links=data.EMPTY_SET,
+        postings=[posting],
+    )
 
 
 class QfxImporter(beangulp.Importer):
@@ -74,6 +112,11 @@ class QfxImporter(beangulp.Importer):
 
     def build_bean_transaction(self, transaction: TransactionType) -> data.Transaction:
         """Build a beancount transaction from an OFX Transaction."""
+
+        if isinstance(transaction, InvestTransaction):
+            return build_bean_invest_transaction(
+                transaction=transaction, bean_account=self.bean_account
+            )
 
         # Create a single posting for it; the user will have to manually
         # categorize the other side.

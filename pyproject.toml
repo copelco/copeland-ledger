@@ -10,6 +10,7 @@ dependencies = [
     "beanquery",
     "click",
     "fava",
+    "fava-investor",
     "keyring",
     "numpy-financial",
     "ofxtools @ git+https://github.com/csingley/ofxtools@master",

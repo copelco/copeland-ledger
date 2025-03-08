@@ -17,6 +17,7 @@ from ofxtools.models.ofx import OFX
 from ..models import (
     InvestStatement,
     InvestTransaction,
+    InvestType,
     Security,
     Statement,
     StatementList,
@@ -161,10 +162,16 @@ def transform_invest_transaction(
 
 
 def transform_invtran(
-    transaction: REINVEST, ticker: str, currency: str
+    transaction: INCOME | REINVEST | SELLMF | TRANSFER, ticker: str, currency: str
 ) -> InvestTransaction:
     """Create an InvestTransaction from an INVTRAN transaction."""
     invtran: INVTRAN = transaction.invtran
+    if hasattr(transaction, "incometype"):
+        inv_type = transaction.incometype
+    elif isinstance(transaction, TRANSFER):
+        inv_type = InvestType.TRANSFER
+    else:
+        inv_type = InvestType.MISC
     return InvestTransaction(
         fit_id=invtran.fitid,
         ticker=ticker,
@@ -172,8 +179,9 @@ def transform_invtran(
         memo=invtran.memo,
         units=transaction.units if hasattr(transaction, "units") else None,
         unit_price=transaction.unitprice if hasattr(transaction, "unitprice") else None,
-        amount=transaction.total if hasattr(transaction, "total") else None,
+        amount=transaction.total if hasattr(transaction, "total") else 0,
         currency=currency,
+        type=inv_type,
     )
 
 
@@ -191,4 +199,5 @@ def transform_invbuy(
         unit_price=invbuy.unitprice,
         amount=invbuy.total,
         currency=currency,
+        type=InvestType.BUY,
     )

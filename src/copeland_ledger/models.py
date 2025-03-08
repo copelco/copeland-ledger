@@ -1,5 +1,6 @@
 import datetime as dt
 from decimal import Decimal
+from enum import StrEnum
 
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -53,10 +54,22 @@ class Security(BaseModel):
     date: dt.datetime
 
 
+class InvestType(StrEnum):
+    """Type of investment transaction."""
+
+    BUY = "BUY"
+    DIVIDEND = "DIV"
+    INTEREST = "INT"
+    MISC = "MISC"
+    SELL = "SELL"
+    TRANSFER = "TRANS"
+
+
 class InvestTransaction(Transaction):
     """Simple representation of an investment transaction."""
 
     ticker: str
+    type: InvestType
     units: Decimal | None
     unit_price: Decimal | None
 
