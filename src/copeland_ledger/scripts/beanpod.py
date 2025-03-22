@@ -59,9 +59,7 @@ def preview(home, filename):
     type=str,
     default="mortgage",
 )
-def amortization(
-    config_path: Path, loan_name: str, show_table: bool, latest_payments: bool
-):
+def amortization(config_path: Path, loan_name: str, show_table: bool, latest_payments: bool):
     """Print the amortization table for a loan, either as a table or Beancount transactions."""
     loan = LoanDetail.from_config_file(path=config_path, name=loan_name)
     table_df = amortization_table(loan=loan)

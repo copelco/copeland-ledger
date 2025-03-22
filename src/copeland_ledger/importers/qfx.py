@@ -99,9 +99,7 @@ class QfxImporter(beangulp.Importer):
         if ofx_content_contains_account_id_suffix(
             ofx_content=content, account_id_suffix=self.acctid_suffix
         ):
-            self.statement = load_statement(
-                path=filepath, acctid_suffix=self.acctid_suffix
-            )
+            self.statement = load_statement(path=filepath, acctid_suffix=self.acctid_suffix)
             logger.info(
                 "Identified QFX file",
                 filename=Path(filepath).name,

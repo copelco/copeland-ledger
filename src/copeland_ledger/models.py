@@ -26,9 +26,7 @@ class Statement(BaseModel):
 
     def as_dataframe(self) -> pd.DataFrame:
         """Return the statement as a pandas DataFrame."""
-        return pd.DataFrame.from_records(
-            [trans.model_dump() for trans in self.transactions]
-        )
+        return pd.DataFrame.from_records([trans.model_dump() for trans in self.transactions])
 
 
 class StatementList(BaseModel):

@@ -15,9 +15,7 @@ warnings.filterwarnings("ignore", category=OFXTypeWarning)
 ACCOUNT_ID_RE = re.compile(r"ACCTID>(?P<account_id>[\w\-|]+)")
 
 
-def ofx_content_contains_account_id_suffix(
-    ofx_content: str, account_id_suffix: str
-) -> bool:
+def ofx_content_contains_account_id_suffix(ofx_content: str, account_id_suffix: str) -> bool:
     """Quickly inspect OFX file contents for the given account ID."""
     if match_result := ACCOUNT_ID_RE.search(ofx_content):
         ofx_account_id = match_result.group("account_id")

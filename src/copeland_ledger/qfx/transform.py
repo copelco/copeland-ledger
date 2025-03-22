@@ -35,7 +35,6 @@ def transform_ofx(ofx: OFX) -> StatementList:
     elif ofx.invstmtmsgsrsv1:
         return transform_invest_statement_list(ofx=ofx)
     else:
-        breakpoint()
         raise NotImplementedError(f"{ofx} is not yet supported.")
 
 
@@ -44,9 +43,7 @@ def transform_ofx(ofx: OFX) -> StatementList:
 
 def transform_statement_list(ofx: OFX) -> StatementList:
     """Create a StatmentList from an OFX object."""
-    statements = [
-        transform_statement(ofx_statement=statement) for statement in ofx.statements
-    ]
+    statements = [transform_statement(ofx_statement=statement) for statement in ofx.statements]
     return StatementList(statements=statements)
 
 
@@ -93,9 +90,7 @@ def transform_invest_securities(ofx: OFX) -> dict[int, Security]:
             date=ofx_security.dtasof,
             name=ofx_security.secname,
             type=(
-                ofx_security.mftype
-                if isinstance(ofx_security, MFINFO)
-                else ofx_security.stocktype
+                ofx_security.mftype if isinstance(ofx_security, MFINFO) else ofx_security.stocktype
             ),
             unit_price=ofx_security.unitprice,
         )
@@ -150,13 +145,9 @@ def transform_invest_transaction(
     """Create an InvestTransaction from an OFX transaction."""
     ticker = securities[int(transaction.secid.uniqueid)].ticker
     if isinstance(transaction, (INCOME, REINVEST, SELLMF, TRANSFER)):
-        return transform_invtran(
-            transaction=transaction, ticker=ticker, currency=currency
-        )
+        return transform_invtran(transaction=transaction, ticker=ticker, currency=currency)
     elif isinstance(transaction, BUYMF):
-        return transform_invbuy(
-            transaction=transaction, ticker=ticker, currency=currency
-        )
+        return transform_invbuy(transaction=transaction, ticker=ticker, currency=currency)
     else:
         raise ValueError(f"Unsupported transaction type: {transaction}")
 
@@ -185,9 +176,7 @@ def transform_invtran(
     )
 
 
-def transform_invbuy(
-    transaction: BUYMF, ticker: str, currency: str
-) -> InvestTransaction:
+def transform_invbuy(transaction: BUYMF, ticker: str, currency: str) -> InvestTransaction:
     """Create an InvestTransaction from an INVBUY transaction."""
     invbuy: INVBUY = transaction.invbuy
     return InvestTransaction(
