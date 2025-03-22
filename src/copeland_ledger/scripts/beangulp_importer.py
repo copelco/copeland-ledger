@@ -6,12 +6,13 @@ import yaml
 from pathlib import Path
 
 from copeland_ledger.importers.qfx import QfxImporter
+from copeland_ledger.importers.pdf_archive import PdfArchiver
 
 
 @dataclass
 class IngestWrapper:
     importers: list
-    hooks: list = None
+    hooks: list | None = None
 
 
 @click.group("beangulp")
@@ -34,6 +35,13 @@ def main(ctx, config):
     accounts = data["accounts"]
     importers = [
         QfxImporter(
+            bean_account=account["bean_account"],
+            org=account["org"],
+            acctid_suffix=account["acctid_suffix"],
+        )
+        for account in accounts
+    ] + [
+        PdfArchiver(
             bean_account=account["bean_account"],
             org=account["org"],
             acctid_suffix=account["acctid_suffix"],

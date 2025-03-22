@@ -16,6 +16,7 @@ dependencies = [
     "ofxtools @ git+https://github.com/csingley/ofxtools@master",
     "pandas",
     "pydantic",
+    "pypdf",
     "rich",
     "structlog",
 ]
@@ -39,6 +40,4 @@ metadata.allow-direct-references = true
 line-length = 100
 
 [tool.pytest.ini_options]
-addopts = "--cov=src --cov-report=html"
 testpaths = ["tests"]
-norecursedirs = [".direnv", ".git"]
