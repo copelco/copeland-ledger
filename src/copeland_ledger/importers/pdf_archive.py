@@ -6,6 +6,7 @@ import structlog
 from beangulp import mimetypes
 from pypdf import PdfReader
 
+from copeland_ledger import config
 
 logger = structlog.get_logger(__file__)
 
@@ -36,17 +37,18 @@ def extract_pdf_text(path: Path) -> str:
 
 
 class PdfArchiver(beangulp.Importer):
-    """A beangulp importer to archive PDF files (no transactions are extracted)."""
+    """A beangulp importer to archive PDF files only (no transactions are extracted)."""
 
-    def __init__(self, org: str, acctid_suffix: str, bean_account: str):
-        self.bean_account = bean_account
-        self.org = org
-        self.acctid_suffix = acctid_suffix
+    def __init__(self, config: config.Account):
+        self.bean_account = config.bean_account
+        self.org = config.org
+        self.acctid_suffix = config.acctid_suffix
+        self.config = config
         logger.debug(
             "Initialized PdfArchiver",
-            bean_account=bean_account,
-            org=org,
-            acctid_suffix=acctid_suffix,
+            bean_account=self.bean_account,
+            org=self.org,
+            acctid_suffix=self.acctid_suffix,
         )
 
     def account(self, filepath):
@@ -60,21 +62,19 @@ class PdfArchiver(beangulp.Importer):
 
     def identify(self, filepath: str) -> bool:
         """Return True if this importer matches a PDF file."""
-
         path = Path(filepath)
         if path.suffix != ".pdf":
             return False
-
         # Match for a compatible MIME type.
         mimetype, _ = mimetypes.guess_type(filepath, strict=False)
         if mimetype not in VALID_MIMETYPES:
             return False
-
+        # Check for the account ID suffix and organization name in the PDF content.
         content = extract_pdf_text(path=path)
-
+        org = self.config.pdf_archive.org if self.config.pdf_archive else self.org
         if find_account_id_suffix_in_pdf(
             acctid_suffix=self.acctid_suffix, content=content
-        ) and find_org_name_in_pdf(org=self.org, content=content):
+        ) and find_org_name_in_pdf(org=org, content=content):
             logger.info(
                 "Identified PDF file",
                 filename=path.name,
@@ -82,5 +82,4 @@ class PdfArchiver(beangulp.Importer):
                 ofx_org=self.org,
             )
             return True
-
         return False

@@ -1,12 +1,13 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 import beangulp
 import click
 import yaml
-from pathlib import Path
 
-from copeland_ledger.importers.qfx import QfxImporter
+from copeland_ledger.config import Config
 from copeland_ledger.importers.pdf_archive import PdfArchiver
+from copeland_ledger.importers.qfx import QfxImporter
 
 
 @dataclass
@@ -30,24 +31,16 @@ def beangulp_group():
 @click.pass_context
 def main(ctx, config):
     config_path = Path(config)
-    with config_path.open("r") as file:
-        data = yaml.safe_load(file)
-    accounts = data["accounts"]
+    ledger_config = Config.model_validate(yaml.safe_load(config_path.read_text()))
+    accounts = ledger_config.accounts
     importers = [
         QfxImporter(
-            bean_account=account["bean_account"],
-            org=account["org"],
-            acctid_suffix=account["acctid_suffix"],
+            bean_account=account.bean_account,
+            org=account.org,
+            acctid_suffix=account.acctid_suffix,
         )
         for account in accounts
-    ] + [
-        PdfArchiver(
-            bean_account=account["bean_account"],
-            org=account["org"],
-            acctid_suffix=account["acctid_suffix"],
-        )
-        for account in accounts
-    ]
+    ] + [PdfArchiver(config=account) for account in accounts]
     ctx.obj = IngestWrapper(
         importers=[beangulp._importer(i) for i in importers],
         hooks=[],
