@@ -13,7 +13,6 @@ class Account(BaseModel):
     """
     Config for an account to import transactions from.
 
-
     Sample account YAML:
         bean_account: Assets:US:Amex:Checking
         org: Amex

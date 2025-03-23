@@ -68,8 +68,8 @@ class InvestTransaction(Transaction):
 
     ticker: str
     type: InvestType
-    units: Decimal | None
-    unit_price: Decimal | None
+    units: Decimal
+    unit_price: Decimal
 
 
 class InvestStatement(Statement):

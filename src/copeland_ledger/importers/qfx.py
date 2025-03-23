@@ -1,13 +1,12 @@
 import datetime as dt
-
 from pathlib import Path
 
 import beangulp
 import structlog
-from beancount.core import amount, data, flags
+from beancount.core import amount, data, flags, position
 from beangulp import mimetypes
 
-from copeland_ledger.models import StatementType, TransactionType, InvestTransaction
+from copeland_ledger.models import InvestTransaction, InvestType, StatementType, TransactionType
 from copeland_ledger.qfx.extract import ofx_content_contains_account_id_suffix
 from copeland_ledger.qfx.load import load_statement
 
@@ -20,21 +19,20 @@ VALID_MIMETYPES = {
 }
 
 
-def build_bean_invest_transaction(
-    transaction: TransactionType, bean_account: str
-) -> data.Transaction:
+def build_bean_invest_transactions(
+    transaction: InvestTransaction, bean_account: str
+) -> list[data.Transaction]:
     """Build a beancount transaction from an OFX Investment Transaction."""
+    entries: list[data.Transaction] = []
 
-    # if transaction.date_posted.date() == dt.date(2024, 11, 14):
-    #     breakpoint()
     account = f"{bean_account}:{transaction.ticker}"
-    cost = data.Cost(
+    cash_account = f"{bean_account}:Cash"
+    cost = position.Cost(
         number=transaction.unit_price,
         currency=transaction.currency,
-        date=None,
+        date=transaction.date_posted.date(),
         label=None,
     )
-    # price = amount.Amount(number=transaction.unit_price, currency=transaction.currency)
     units = amount.Amount(number=transaction.units, currency=transaction.ticker)
     posting = data.Posting(
         account=account,
@@ -44,18 +42,55 @@ def build_bean_invest_transaction(
         flag=None,
         meta={"type": transaction.type, "amount": transaction.amount},
     )
+    cash_posting = data.Posting(
+        account=cash_account,
+        units=None,
+        cost=None,
+        price=None,
+        flag=None,
+        meta=None,
+    )
     # Build the transaction with a single leg.
     fileloc = data.new_metadata("<build_transaction>", 0)
-    return data.Transaction(
-        meta=fileloc,
-        date=transaction.date_posted.date(),
-        flag=flags.FLAG_OKAY,
-        payee=None,
-        narration=transaction.memo,
-        tags=data.EMPTY_SET,
-        links=data.EMPTY_SET,
-        postings=[posting],
+    entries.append(
+        data.Transaction(
+            meta=fileloc,
+            date=transaction.date_posted.date(),
+            flag=flags.FLAG_OKAY,
+            payee=None,
+            narration=transaction.memo,
+            tags=data.EMPTY_SET,
+            links=data.EMPTY_SET,
+            postings=[posting, cash_posting],
+        )
     )
+
+    if transaction.type == InvestType.DIVIDEND:
+        # Create a second posting for the dividend income.
+        income_account = bean_account.replace("Assets", "Income")
+        income_account = f"{income_account}:Dividend:{transaction.ticker}"
+        posting = data.Posting(
+            account=income_account,
+            units=amount.Amount(number=transaction.amount, currency=transaction.currency),
+            cost=None,
+            price=None,
+            flag=None,
+            meta=None,
+        )
+        entries.append(
+            data.Transaction(
+                meta=fileloc,
+                date=transaction.date_posted.date(),
+                flag=flags.FLAG_OKAY,
+                payee="Dividend Income",
+                narration=transaction.ticker,
+                tags=data.EMPTY_SET,
+                links=data.EMPTY_SET,
+                postings=[posting, cash_posting],
+            )
+        )
+
+    return entries
 
 
 class QfxImporter(beangulp.Importer):
@@ -108,11 +143,11 @@ class QfxImporter(beangulp.Importer):
             )
             return True
 
-    def build_bean_transaction(self, transaction: TransactionType) -> data.Transaction:
+    def build_bean_transactions(self, transaction: TransactionType) -> list[data.Transaction]:
         """Build a beancount transaction from an OFX Transaction."""
 
         if isinstance(transaction, InvestTransaction):
-            return build_bean_invest_transaction(
+            return build_bean_invest_transactions(
                 transaction=transaction, bean_account=self.bean_account
             )
 
@@ -129,16 +164,18 @@ class QfxImporter(beangulp.Importer):
         )
         # Build the transaction with a single leg.
         fileloc = data.new_metadata("<build_transaction>", 0)
-        return data.Transaction(
-            meta=fileloc,
-            date=transaction.date_posted.date(),
-            flag=flags.FLAG_OKAY,
-            payee=None,
-            narration=transaction.memo,
-            tags=data.EMPTY_SET,
-            links=data.EMPTY_SET,
-            postings=[posting],
-        )
+        return [
+            data.Transaction(
+                meta=fileloc,
+                date=transaction.date_posted.date(),
+                flag=flags.FLAG_OKAY,
+                payee=None,
+                narration=transaction.memo,
+                tags=data.EMPTY_SET,
+                links=data.EMPTY_SET,
+                postings=[posting],
+            )
+        ]
 
     def extract(self, filepath: str, existing: data.Directive) -> data.Directives:
         """Extract a list of partially complete transactions from the file."""
@@ -147,8 +184,8 @@ class QfxImporter(beangulp.Importer):
         stmt_entries = []
         transactions = self.statement.transactions if self.statement else []
         for i, transaction in enumerate(transactions):
-            entry = self.build_bean_transaction(transaction)
-            entry = entry._replace(meta=data.new_metadata(filename=filepath, lineno=i))
-            stmt_entries.append(entry)
+            for entry in self.build_bean_transactions(transaction):
+                entry = entry._replace(meta=data.new_metadata(filename=filepath, lineno=i))
+                stmt_entries.append(entry)
 
         return data.sorted(stmt_entries)
