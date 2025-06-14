@@ -26,7 +26,7 @@ Text Files. This project uses the following packages:
    so that when our code is modified, the changes automatically apply.
 
    ```shell
-   pip install -e ".[dev]"
+   pip install -Ue ".[dev]"
    ```
 
 3. Create a configuration file for your accounts.
