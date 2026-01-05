@@ -19,17 +19,19 @@ Text Files. This project uses the following packages:
    export $LEDGER_HOME=~/path/to/your/ledger/directory
    ```
 
-2. Install the required dependencies.
-
-   Here we are using `-e`, for ["editable
-   mode"](https://pip.pypa.io/en/latest/topics/local-project-installs/#editable-installs),
-   so that when our code is modified, the changes automatically apply.
+2. Install [uv](https://docs.astral.sh/uv/) if you haven't already:
 
    ```shell
-   pip install -Ue ".[dev]"
+   curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
-3. Create a configuration file for your accounts.
+3. Install the required dependencies using `uv`:
+
+   ```shell
+   uv sync --all-extras
+   ```
+
+4. Create a configuration file for your accounts.
 
    ```yaml
    # example $LEDGER_HOME/accounts.yaml
@@ -39,12 +41,12 @@ Text Files. This project uses the following packages:
        acctid_suffix: "1111"
    ```
 
-4. Import data using the instructions below.
+5. Import data using the instructions below.
 
-5. Run fava!
+6. Run fava!
 
    ```shell
-   fava $LEDGER_HOME/ledger.beancount
+   uv run fava $LEDGER_HOME/ledger.beancount
    ```
 
 ## Import data
@@ -52,38 +54,38 @@ Text Files. This project uses the following packages:
 Download files manually to `$LEDGER_HOME/downloads` and verify the data:
 
 ```shell
-beangulp-import --config=$LEDGER_HOME/accounts.yaml beangulp identify $LEDGER_HOME/downloads
+uv run beangulp-import --config=$LEDGER_HOME/accounts.yaml beangulp identify $LEDGER_HOME/downloads
 ```
 
 Preview the data:
 
 ```shell
-bean-pod preview transactions.qfx
+uv run bean-pod preview transactions.qfx
 ```
 
 Extract the data:
 
 ```shell
-beangulp-import --config=$LEDGER_HOME/accounts.yaml beangulp extract $LEDGER_HOME/downloads
+uv run beangulp-import --config=$LEDGER_HOME/accounts.yaml beangulp extract $LEDGER_HOME/downloads
 ```
 
 Check the data:
 
 ```shell
-bean-check $LEDGER_HOME/ledger.beancount
+uv run bean-check $LEDGER_HOME/ledger.beancount
 ```
 
 Archive the data:
 
 ```shell
-beangulp-import --config=$LEDGER_HOME/accounts.yaml beangulp archive $LEDGER_HOME/downloads --destination=$LEDGER_HOME/documents
+uv run beangulp-import --config=$LEDGER_HOME/accounts.yaml beangulp archive $LEDGER_HOME/downloads --destination=$LEDGER_HOME/documents
 ```
 
 Fetch latest price of stocks:
 
 ```shell
-bean-price $LEDGER_HOME/ledger.beancount
-bean-price --update $LEDGER_HOME/ledger.beancount
+uv run bean-price $LEDGER_HOME/ledger.beancount
+uv run bean-price --update $LEDGER_HOME/ledger.beancount
 ```
 
 ## Helpful Links

@@ -1,6 +1,6 @@
-import pytest
 from pathlib import Path
 
+import pytest
 
 from copeland_ledger.importers.pdf_archive import (
     extract_pdf_text,

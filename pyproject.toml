@@ -3,7 +3,7 @@ name = "copeland_ledger"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.9,<3.13"
+requires-python = ">3.9,<3.14"
 dependencies = [
     "beancount",
     "beanprice @ git+https://github.com/beancount/beanprice.git@master",
@@ -21,7 +21,7 @@ dependencies = [
     "structlog",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = ["jupyterlab", "pre-commit", "pytest", "pytest-cov", "ruff"]
 
 [project.scripts]
@@ -38,17 +38,21 @@ metadata.allow-direct-references = true
 
 [tool.ruff]
 line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
-[tool.black]
-line-length = 100
-exclude = '''
-/(
-  \.git
-  | conf
-  | env
-  | virtualenv
-)/
-'''

@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from .extract import parse_ofx
-from ..models import StatementType, StatementList
-from .transform import transform_ofx
-
 import structlog
+
+from ..models import StatementList, StatementType
+from .extract import parse_ofx
+from .transform import transform_ofx
 
 logger = structlog.getLogger(__name__)
 
