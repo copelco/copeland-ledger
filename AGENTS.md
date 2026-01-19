@@ -32,7 +32,7 @@ dsd-pythonanywhere is a tool for tracking expenses using beancount.
 - Path Handling: Always use `pathlib.Path` for file system operations. Avoid `os.path`.
   - Type hint paths as `pathlib.Path` for internal logic and `pathlib.Path | str` for public API entry points.
   - Prefer path operators (e.g., `path / "subdir"`) and methods like `.read_text()` or `.write_text()`.
-  
+
 ### Agent Workflow
 
 - Always maintain a detailed todo/checklist list.
