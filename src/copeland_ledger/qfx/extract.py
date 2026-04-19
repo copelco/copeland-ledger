@@ -53,6 +53,11 @@ def fix_ofx(root_element: ET.Element) -> ET.Element:
         if element.text is not None:
             element.text = element.text.upper()
 
+    # Change the transaction type to uppercase
+    for element in root_element.iter("TRNTYPE"):
+        if element.text is not None:
+            element.text = element.text.upper()
+
     # For each STMTTRN tag, move the NAME tag to be the last child
     for element in root_element.iter("STMTTRN"):
         name = element.find("NAME")
