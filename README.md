@@ -85,7 +85,7 @@ Fetch latest price of stocks:
 
 ```shell
 uv run bean-price $LEDGER_HOME/ledger.beancount
-uv run bean-price --update $LEDGER_HOME/ledger.beancount
+uv run bean-price --update $LEDGER_HOME/ledger.beancount >> $LEDGER_HOME/accounts/2026.prices.beancount
 ```
 
 ## Helpful Links
