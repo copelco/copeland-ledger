@@ -121,7 +121,7 @@ def transform_invest_statement(
             securities=securities,
             currency=currency,
         )
-        for ofx_transaction in ofx_statement.transactions
+        for ofx_transaction in (ofx_statement.transactions or [])
     ]
     # Sort transactions by date
     transactions = sorted(transactions, key=lambda t: t.date_posted)

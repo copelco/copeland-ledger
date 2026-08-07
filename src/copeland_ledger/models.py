@@ -12,7 +12,7 @@ class Transaction(BaseModel):
     # Financial Institution Transaction ID
     fit_id: str
     date_posted: dt.datetime
-    memo: str
+    memo: str | None
     amount: Decimal
     currency: str
 
@@ -61,6 +61,8 @@ class InvestType(StrEnum):
     MISC = "MISC"
     SELL = "SELL"
     TRANSFER = "TRANS"
+    CGLONG = "CGLONG"  # Capital gain long term
+    CGSHORT = "CGSHORT"  # Capital gain short term
 
 
 class InvestTransaction(Transaction):
