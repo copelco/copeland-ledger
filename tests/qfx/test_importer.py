@@ -26,9 +26,7 @@ def make_dividend_transaction() -> InvestTransaction:
 def test_dividend_income_posting_credits_income():
     entries = build_bean_invest_transactions(make_dividend_transaction(), BEAN_ACCOUNT)
     income_entry = next(e for e in entries if e.payee == "Dividend Income")
-    income_posting = next(
-        p for p in income_entry.postings if p.account.startswith("Income")
-    )
+    income_posting = next(p for p in income_entry.postings if p.account.startswith("Income"))
     # Income is a credit: the amount must be negative so the cash leg is positive.
     assert income_posting.units.number == Decimal("-210.00")
 
@@ -39,9 +37,7 @@ def test_dividend_income_posting_with_negative_source_amount():
     txn = txn.model_copy(update={"amount": Decimal("-200.00")})
     entries = build_bean_invest_transactions(txn, BEAN_ACCOUNT)
     income_entry = next(e for e in entries if e.payee == "Dividend Income")
-    income_posting = next(
-        p for p in income_entry.postings if p.account.startswith("Income")
-    )
+    income_posting = next(p for p in income_entry.postings if p.account.startswith("Income"))
     # Income credit is the same sign regardless of the source sign convention.
     assert income_posting.units.number == Decimal("-200.00")
 
@@ -62,9 +58,7 @@ def make_cash_dividend_transaction() -> InvestTransaction:
 
 
 def test_cash_dividend_posts_income_and_cash():
-    entries = build_bean_invest_transactions(
-        make_cash_dividend_transaction(), BEAN_ACCOUNT
-    )
+    entries = build_bean_invest_transactions(make_cash_dividend_transaction(), BEAN_ACCOUNT)
     # A single balanced transaction: income credited, cash deposited.
     assert len(entries) == 1
     postings = entries[0].postings
@@ -83,9 +77,7 @@ def test_dividend_drip_cash_leg_net_zero():
     # which beancount infers as the negative of the filled leg.
     shares_posting = next(p for p in drip_entry.postings if p.units is not None)
     drip_cash = -(shares_posting.units.number * shares_posting.cost.number)
-    income_posting = next(
-        p for p in income_entry.postings if p.account.startswith("Income")
-    )
+    income_posting = next(p for p in income_entry.postings if p.account.startswith("Income"))
     income_cash = -income_posting.units.number
 
     # The DRIP spends exactly the dividend it was paid, within pricing rounding.
