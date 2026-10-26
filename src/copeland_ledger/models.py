@@ -77,7 +77,8 @@ class InvestTransaction(Transaction):
 class InvestStatement(Statement):
     """Simple representation of an investment statement."""
 
-    date: dt.datetime
+    # OFX statements may omit DTASOF.
+    date: dt.datetime | None = None
     broker: str
     securities: dict[int, Security] = Field(repr=False)
     transactions: list[InvestTransaction] = Field(repr=False)

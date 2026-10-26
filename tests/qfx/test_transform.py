@@ -14,3 +14,4 @@ def test_transform_invest_statement_none_transactions():
 
     result = transform_invest_statement(ofx_statement=ofx_statement, securities={})
     assert result.transactions == []
+    assert result.date is None
