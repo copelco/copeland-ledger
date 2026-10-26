@@ -14,9 +14,11 @@ Text Files. This project uses the following packages:
 
    ```shell
    # example .envrc file if you use direnv
-   layout python python3.12
+   unset VIRTUAL_ENV
+   uv sync --locked
+   PATH_add .venv/bin
 
-   export $LEDGER_HOME=~/path/to/your/ledger/directory
+   export LEDGER_HOME=~/path/to/your/ledger/directory
    ```
 
 2. Install [uv](https://docs.astral.sh/uv/) if you haven't already:
