@@ -54,7 +54,7 @@ Text Files. This project uses the following packages:
 Download files manually to `$LEDGER_HOME/downloads` and verify the data:
 
 ```shell
-uv run beangulp-import --config=$LEDGER_HOME/accounts.yaml beangulp identify $LEDGER_HOME/downloads
+uv run beangulp-import identify
 ```
 
 Preview the data:
@@ -66,7 +66,7 @@ uv run bean-pod preview transactions.qfx
 Extract the data:
 
 ```shell
-uv run beangulp-import --config=$LEDGER_HOME/accounts.yaml beangulp extract $LEDGER_HOME/downloads
+uv run beangulp-import extract
 ```
 
 Check the data:
@@ -78,8 +78,13 @@ uv run bean-check $LEDGER_HOME/ledger.beancount
 Archive the data:
 
 ```shell
-uv run beangulp-import --config=$LEDGER_HOME/accounts.yaml beangulp archive $LEDGER_HOME/downloads --destination=$LEDGER_HOME/documents
+uv run beangulp-import archive
 ```
+
+All three commands default to `$LEDGER_HOME/accounts.yaml`,
+`$LEDGER_HOME/downloads`, and `$LEDGER_HOME/documents`; pass a `SRC`
+argument or `--config`/`-o` to point them elsewhere, e.g.
+`uv run beangulp-import archive path/to/downloads --destination=documents`.
 
 Fetch latest price of stocks:
 
