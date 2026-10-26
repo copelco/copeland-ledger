@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-import beangulp
 import click
 import yaml
+from beangulp import _archive, _extract, _identify, _importer
 
 from copeland_ledger.config import Config
 from copeland_ledger.importers.pdf_archive import PdfArchiver
@@ -16,24 +16,34 @@ class IngestWrapper:
     hooks: list | None = None
 
 
-@click.group("beangulp")
-def beangulp_group():
-    pass
-
-
 @click.group()
 @click.option(
+    "--ledger-home",
+    envvar="LEDGER_HOME",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+    help="Root directory for ledger files.",
+)
+@click.option(
     "--config",
-    type=click.Path(exists=True),
-    required=True,
-    help="Path to config YAML file with account mappings.",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="Path to config YAML file. Defaults to <ledger-home>/accounts.yaml.",
 )
 @click.pass_context
-def main(ctx, config):
-    config_path = Path(config)
-    ledger_config = Config.model_validate(yaml.safe_load(config_path.read_text()))
+def main(ctx: click.Context, ledger_home: Path, config: Path | None):
+    """Import ledger data using beangulp."""
+    if ledger_home is None:
+        raise click.UsageError(
+            "No value for --ledger-home. Set the LEDGER_HOME environment variable "
+            "or pass --ledger-home PATH."
+        )
+    config = config or (ledger_home / "accounts.yaml")
+    if not config.is_file():
+        raise click.BadParameter(f"Config file not found: {config}", param_hint="'--config'")
+
+    ledger_config = Config.model_validate(yaml.safe_load(config.read_text()))
     accounts = ledger_config.accounts
-    importers = [
+    raw_importers = [
         QfxImporter(
             bean_account=account.bean_account,
             org=account.org,
@@ -41,16 +51,24 @@ def main(ctx, config):
         )
         for account in accounts
     ] + [PdfArchiver(config=account) for account in accounts]
-    ctx.obj = IngestWrapper(
-        importers=[beangulp._importer(i) for i in importers],
-        hooks=[],
-    )
+    importers = [_importer(i) for i in raw_importers]
+    ctx.obj = IngestWrapper(importers=importers, hooks=[])
+
+    # Inject dynamic default arguments for the native beangulp subcommands
+    downloads = (str(ledger_home / "downloads"),)
+    ctx.default_map = {
+        "identify": {"src": downloads},
+        "extract": {"src": downloads},
+        "archive": {
+            "src": downloads,
+            "destination": str(ledger_home / "documents"),
+        },
+    }
 
 
-main.add_command(beangulp_group)
-beangulp_group.add_command(beangulp._archive)
-beangulp_group.add_command(beangulp._extract)
-beangulp_group.add_command(beangulp._identify)
+main.add_command(_identify, name="identify")
+main.add_command(_extract, name="extract")
+main.add_command(_archive, name="archive")
 
 
 if __name__ == "__main__":
