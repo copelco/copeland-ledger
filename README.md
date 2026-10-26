@@ -81,10 +81,14 @@ Archive the data:
 uv run beangulp-import archive
 ```
 
-All three commands default to `$LEDGER_HOME/accounts.yaml`,
-`$LEDGER_HOME/downloads`, and `$LEDGER_HOME/documents`; pass a `SRC`
-argument or `--config`/`-o` to point them elsewhere, e.g.
-`uv run beangulp-import archive path/to/downloads --destination=documents`.
+All three commands use `$LEDGER_HOME/accounts.yaml`,
+`$LEDGER_HOME/downloads`, and `$LEDGER_HOME/documents` by default.
+To point them elsewhere, pass a path or a flag.
+For example:
+
+```shell
+uv run beangulp-import archive path/to/downloads --destination=documents
+```
 
 Fetch latest price of stocks:
 
