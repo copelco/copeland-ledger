@@ -27,6 +27,49 @@ def build_bean_invest_transactions(
 
     account = f"{bean_account}:{transaction.ticker}"
     cash_account = f"{bean_account}:Cash"
+    fileloc = data.new_metadata("<build_transaction>", 0)
+
+    if transaction.units is None:
+        # A dividend paid in cash (no shares purchased). Post income against
+        # an explicit deposit into the cash account.
+        income_account = f"{bean_account.replace('Assets', 'Income')}:Dividend:{transaction.ticker}"
+        entries.append(
+            data.Transaction(
+                meta=fileloc,
+                date=transaction.date_posted.date(),
+                flag=flags.FLAG_OKAY,
+                payee="Dividend Income",
+                narration=transaction.ticker,
+                tags=data.EMPTY_SET,
+                links=data.EMPTY_SET,
+                postings=[
+                    data.Posting(
+                        account=income_account,
+                        units=amount.Amount(
+                            number=-abs(transaction.amount),
+                            currency=transaction.currency,
+                        ),
+                        cost=None,
+                        price=None,
+                        flag=None,
+                        meta=None,
+                    ),
+                    data.Posting(
+                        account=cash_account,
+                        units=amount.Amount(
+                            number=abs(transaction.amount),
+                            currency=transaction.currency,
+                        ),
+                        cost=None,
+                        price=None,
+                        flag=None,
+                        meta=None,
+                    ),
+                ],
+            )
+        )
+        return entries
+
     cost = position.Cost(
         number=transaction.unit_price,
         currency=transaction.currency,
@@ -51,7 +94,6 @@ def build_bean_invest_transactions(
         meta=None,
     )
     # Build the transaction with a single leg.
-    fileloc = data.new_metadata("<build_transaction>", 0)
     entries.append(
         data.Transaction(
             meta=fileloc,
@@ -70,8 +112,11 @@ def build_bean_invest_transactions(
         income_account = bean_account.replace("Assets", "Income")
         income_account = f"{income_account}:Dividend:{transaction.ticker}"
         posting = data.Posting(
+            # Income is a credit: post the magnitude as negative regardless of the
+            # source file's sign convention (Vanguard's QFX has used both a negative
+            # and a positive TOTAL for dividends).
             account=income_account,
-            units=amount.Amount(number=transaction.amount, currency=transaction.currency),
+            units=amount.Amount(number=-abs(transaction.amount), currency=transaction.currency),
             cost=None,
             price=None,
             flag=None,
