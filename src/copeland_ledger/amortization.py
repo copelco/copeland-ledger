@@ -118,7 +118,8 @@ def amortization_table(loan: LoanDetail) -> pd.DataFrame:
     df["curr_balance"] = loan.principal + df["principal_cum"]
 
     # Round the values
-    df = df.round(2)
+    numeric = df.select_dtypes("number")
+    df[numeric.columns] = numeric.round(2)
 
     return df
 
