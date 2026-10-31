@@ -68,6 +68,34 @@ def test_cash_dividend_posts_income_and_cash():
     assert cash_posting.units.number == Decimal("75.0")
 
 
+def make_capital_gain_transaction(
+    ticker: str = "VSCGX", type: InvestType = InvestType.CGLONG
+) -> InvestTransaction:
+    """A synthetic capital-gain distribution: $500.00 reinvested at $40.00/share."""
+    return InvestTransaction(
+        fit_id="VG-2",
+        date_posted=dt.datetime(2025, 12, 23),
+        memo="DIV REINVEST LT CAP GAIN",
+        amount=Decimal("500.00"),
+        currency=CASH,
+        ticker=ticker,
+        type=type,
+        units=Decimal("12.50"),
+        unit_price=Decimal("40.00"),
+    )
+
+
+def test_capital_gain_reinvestment_posts_income_by_term():
+    for txn_type, term in ((InvestType.CGLONG, "Long"), (InvestType.CGSHORT, "Short")):
+        entries = build_bean_invest_transactions(
+            make_capital_gain_transaction(type=txn_type), BEAN_ACCOUNT
+        )
+        income_entry = next(e for e in entries if e.payee == "Capital Gain Income")
+        income_posting = next(p for p in income_entry.postings if p.account.startswith("Income"))
+        assert income_posting.account == f"Income:US:Vanguard:Brokerage:CapitalGain:{term}:VSCGX"
+        assert income_posting.units.number == Decimal("-500.00")
+
+
 def test_dividend_drip_cash_leg_net_zero():
     entries = build_bean_invest_transactions(make_dividend_transaction(), BEAN_ACCOUNT)
     drip_entry = next(e for e in entries if e.payee != "Dividend Income")

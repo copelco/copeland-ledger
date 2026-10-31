@@ -107,10 +107,17 @@ def build_bean_invest_transactions(
         )
     )
 
-    if transaction.type == InvestType.DIVIDEND:
-        # Create a second posting for the dividend income.
-        income_account = bean_account.replace("Assets", "Income")
-        income_account = f"{income_account}:Dividend:{transaction.ticker}"
+    # Income distributions to offset the cash spent by the reinvestment.
+    income_category = {
+        InvestType.DIVIDEND: ("Dividend", "Dividend Income"),
+        InvestType.CGLONG: ("CapitalGain:Long", "Capital Gain Income"),
+        InvestType.CGSHORT: ("CapitalGain:Short", "Capital Gain Income"),
+    }.get(transaction.type)
+    if income_category is not None:
+        category, payee = income_category
+        income_account = (
+            f"{bean_account.replace('Assets', 'Income')}:{category}:{transaction.ticker}"
+        )
         posting = data.Posting(
             # Income is a credit: post the magnitude as negative regardless of the
             # source file's sign convention (Vanguard's QFX has used both a negative
@@ -127,7 +134,7 @@ def build_bean_invest_transactions(
                 meta=fileloc,
                 date=transaction.date_posted.date(),
                 flag=flags.FLAG_OKAY,
-                payee="Dividend Income",
+                payee=payee,
                 narration=transaction.ticker,
                 tags=data.EMPTY_SET,
                 links=data.EMPTY_SET,
